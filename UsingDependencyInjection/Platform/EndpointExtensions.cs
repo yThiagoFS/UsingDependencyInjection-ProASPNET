@@ -21,10 +21,33 @@ namespace UsingDependencyInjection.Platform
             {
                 throw new Exception("Method cannot be used");
             }
+
+            /* Criado para o Singleton*/
             T endpointInstance =
                 ActivatorUtilities.CreateInstance<T>(app.ServiceProvider);
-                                                         //passando para o método: context     -     instancia(formatter nesse caso)
-            app.MapGet(path, (RequestDelegate)methodInfo.CreateDelegate(typeof(RequestDelegate), endpointInstance));
+            //                                             //passando para o método: context     -     instancia(formatter nesse caso)
+            //app.MapGet(path, (RequestDelegate)methodInfo.CreateDelegate(typeof(RequestDelegate), endpointInstance));
+
+
+            /*Modificação para o Transient*/
+
+            ParameterInfo[] methodParams = methodInfo!.GetParameters();
+
+            app.MapGet(path, context =>
+            {
+                T endpointInstance =
+                    ActivatorUtilities.CreateInstance<T>(context.RequestServices);
+                    return (Task)methodInfo.Invoke(endpointInstance!,
+                        methodParams.Select(p => p.ParameterType == typeof(HttpContext)
+                        ? context
+                        : context.RequestServices.GetService(p.ParameterType)).ToArray())!;
+            });
+            
+                // utilizado para injeção de dependência em escopo (scoped)
+                
+
+                // utilizo esse no caso de Transient
+                //: app.ServiceProvider.GetService(p.ParameterType)).ToArray()))!);
         }
         // Esse método de extensão aceita um tipo genérico de parametro que especifica a classe de endpoint que vai ser usada.
         // o outro argumento é o path que vai ser utilizado para criar a rota e o nome do metodo endpoint da classe que processará os requests

@@ -5,7 +5,16 @@ using UsingDependencyInjection.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<IResponseFormatter,HtmlResponseFormatter>();
+IWebHostEnvironment env = builder.Environment;
+if (env.IsDevelopment())
+{
+    builder.Services.AddScoped<IResponseFormatter, TimeResponseFormatter>();
+    builder.Services.AddScoped<ITimeStamper, DefaultTimeStamper>();
+}
+else
+{
+    builder.Services.AddScoped<IResponseFormatter, HtmlResponseFormatter>();
+}
 
 var app = builder.Build();
 
@@ -38,7 +47,7 @@ app.MapGet("middleware/function", async (HttpContext context, IResponseFormatter
 //Utilizando também uma extensão da interface, porém, mais complexa, passando o tipo genérico da classe e resolvendo suas dependências
 app.MapEndpoint<WeatherEndpoint>("endpoint/class");
 
-app.MapGet("endpoint/function", async (HttpContext context, IResponseFormatter formatter) =>
+app.MapGet("endpoint/function", async (HttpContext context) =>
 {
     #region singleton
     //Forma utilizando Singleton (para poder "compartilhar" o mesmo serviço pela aplicação)
@@ -51,6 +60,8 @@ app.MapGet("endpoint/function", async (HttpContext context, IResponseFormatter f
     //await TypeBroker.Formatter.Format(context, "Endpoint Function: It is sunny in LA");
     #endregion
 
+    IResponseFormatter formatter =
+        context.RequestServices.GetRequiredService<IResponseFormatter>();
     await formatter.Format(context, "Endpoint Function: It is sunny in LA");
 });
 

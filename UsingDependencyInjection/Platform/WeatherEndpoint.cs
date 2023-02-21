@@ -4,16 +4,16 @@ namespace UsingDependencyInjection.Platform
 {
     public class WeatherEndpoint
     {
-        private IResponseFormatter _formatter;
+        //private IResponseFormatter _formatter;
 
-        public WeatherEndpoint(IResponseFormatter formatter)
-        {
-            _formatter = formatter;
-        }
+        //public WeatherEndpoint(IResponseFormatter formatter)
+        //{
+        //    _formatter = formatter;
+        //}
 
-        public async Task Endpoint(HttpContext context)
+        public async Task Endpoint(HttpContext context, IResponseFormatter formatter)
         {
-            await _formatter.Format(context, "Endpoint Class: It is cloudy in Milan");
+            await formatter.Format(context, "Endpoint Class: It is cloudy in Milan");
         }
     }
 }
